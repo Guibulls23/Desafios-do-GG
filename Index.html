@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Desafios do GG</title>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e0e11;--card:#18181d;--ink:#f4f1ea;--mute:#8d8a96;--line:#2a2a32;--bd:#3d3d49;--acc:#d4ff3a;--acc2:#ff6a3d;--hl:#d4ff3a;--on:#0e0e11;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#efece4;--card:#fbf9f4;--ink:#111114;--mute:#6b6874;--line:#dcd7ca;--bd:#bdb7a8;--hl:#d9421a}}
+:root[data-theme="light"]{--bg:#efece4;--card:#fbf9f4;--ink:#111114;--mute:#6b6874;--line:#dcd7ca;--bd:#bdb7a8;--hl:#d9421a}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"DM Sans",system-ui,sans-serif;min-height:100vh}
+#app{max-width:480px;margin:0 auto;padding:26px 20px 56px}
+h1,h2,.big,.secret,.game b,.game .ic{font-family:Anton,Impact,"Arial Narrow Bold",sans-serif;font-weight:400;text-transform:uppercase}
+h1{font-size:76px;margin:10px 0 6px;line-height:.9;letter-spacing:-.5px}
+h1 span{color:var(--hl)}
+h2{font-size:44px;margin:6px 0 8px;line-height:1;letter-spacing:.3px}
+p.sub{color:var(--mute);margin:0 0 20px;line-height:1.45;font-size:15px}
+.grid{display:flex;flex-direction:column;gap:10px;margin:24px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:26px;padding:18px;margin-bottom:14px}
+.game{margin:0;display:flex;align-items:center;gap:16px;width:100%;text-align:left;font:inherit;background:var(--c);color:#0e0e11;border:0;border-radius:28px;padding:22px 22px;cursor:pointer;position:relative;transition:transform .12s}
+.game:active{transform:scale(.97)}
+.game::after{content:"↗";font-size:28px;font-weight:700;margin-left:auto}
+.game .ic{font-size:20px;opacity:.55;min-width:30px}
+.game b{font-size:34px;line-height:1;display:block;letter-spacing:.3px}
+.game span{font-size:13px;line-height:1.3;display:block;margin-top:6px;opacity:.75}
+button{font:inherit;cursor:pointer}
+.btn{background:var(--acc);color:var(--on);border:0;border-radius:999px;padding:16px 22px;font-weight:700;font-size:15px;letter-spacing:.06em;text-transform:uppercase;width:100%;margin-top:12px;transition:transform .1s}
+.btn:active{transform:scale(.97)}
+.btn.alt{background:transparent;color:var(--ink);border:1px solid var(--bd)}
+.btn.blue{background:var(--acc2);color:#0e0e11}
+.back{background:none;border:0;color:var(--mute);padding:4px 0;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px}
+input,select{font:inherit;padding:14px 16px;border-radius:16px;border:1px solid var(--bd);background:var(--bg);color:var(--ink);width:100%}
+input:focus,select:focus{outline:2px solid var(--acc);outline-offset:1px}
+.row{display:flex;gap:10px}.row .btn{width:auto;margin-top:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.chip{background:transparent;border:1px solid var(--bd);border-radius:999px;padding:7px 14px;font-size:14px;color:var(--ink)}
+.chip button{background:none;border:0;color:var(--mute);margin-left:4px;padding:0}
+.chip.opt{padding:11px 18px;font-size:15px;font-weight:500}
+.chip.opt.on{background:var(--acc);border-color:var(--acc);color:var(--on);font-weight:700}
+.chip.opt:disabled{opacity:.3}
+.big{font-size:190px;text-align:center;line-height:1;margin:8px 0 6px;color:var(--hl)}
+.center{text-align:center}
+.secret{font-size:46px;text-align:center;padding:36px 12px;border-radius:22px;background:var(--bg);border:1px dashed var(--bd);margin:16px 0;word-break:break-word;line-height:1.1;letter-spacing:.3px}
+.warn{color:var(--hl)}
+.list div{display:flex;justify-content:space-between;padding:13px 2px;border-bottom:1px solid var(--line);font-weight:500}
+.list div:last-child{border:0}
+.list b{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:24px;color:var(--hl)}
+label{font-size:13px;color:var(--mute);display:block;margin:10px 0 6px}
+.card>b{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+
+let roster=[],players=[],sel=[],g={};
+try{const sv=JSON.parse(localStorage.getItem('joguinhos_players')||'[]');if(Array.isArray(sv))roster=sv.filter(x=>typeof x==='string').slice(0,20)}catch(e){}
+try{const ss=JSON.parse(localStorage.getItem('joguinhos_sel')||'null');sel=Array.isArray(ss)?ss.filter(x=>roster.includes(x)):[...roster]}catch(e){sel=[...roster]}
+const cur=()=>roster.filter(n=>sel.includes(n));
+function save(){try{localStorage.setItem('joguinhos_players',JSON.stringify(roster));localStorage.setItem('joguinhos_sel',JSON.stringify(sel))}catch(e){}}
+const WORDS={
+ 'Comidas':[['Pizza','Lasanha','Esfiha','Calzone'],['Coxinha','Pastel','Empada','Risole'],['Brigadeiro','Beijinho','Cajuzinho','Trufa']],
+ 'Lugares':[['Praia','Piscina','Lago','Cachoeira'],['Cinema','Teatro','Circo','Show'],['Escola','Faculdade','Biblioteca','Cursinho']],
+ 'Animais':[['Cachorro','Lobo','Raposa','Coiote'],['Gato','Leão','Tigre','Onça'],['Tubarão','Golfinho','Baleia','Orca']],
+ 'Objetos':[['Violão','Guitarra','Cavaquinho','Ukulele'],['Bicicleta','Moto','Patinete','Skate'],['Óculos','Lupa','Binóculo','Luneta']],
+ 'Profissões':[['Médico','Enfermeiro','Dentista','Veterinário'],['Padeiro','Confeiteiro','Cozinheiro','Churrasqueiro'],['Piloto','Motorista','Maquinista','Capitão']],
+ 'Disney':[['Mickey','Minnie','Pateta','Pluto','Donald'],['Elsa','Anna','Olaf','Kristoff','Sven'],['Simba','Mufasa','Scar','Nala','Timão'],['Moana','Mulan','Rapunzel','Cinderela','Branca de Neve'],['Woody','Buzz Lightyear','Jessie','Rex','Slinky']],
+ 'Jogadores de futebol':[['Messi','Neymar','Cristiano Ronaldo','Mbappé','Haaland'],['Pelé','Maradona','Zico','Romário','Ronaldinho'],['Vini Jr','Rodrygo','Raphinha','Endrick','Casemiro'],['Modrić','Kroos','De Bruyne','Pedri','Xavi'],['Neuer','Alisson','Courtois','Buffon','Ederson']],
+ 'Filmes':[['Homem-Aranha','Batman','Superman','Homem de Ferro','Thor'],['Titanic','Avatar','Gladiador','Coração Valente','Dunkirk'],['O Rei Leão','Aladdin','A Bela e a Fera','Frozen','Moana'],['Harry Potter','Senhor dos Anéis','O Hobbit','Nárnia','Percy Jackson'],['Tubarão','Jurassic Park','King Kong','Godzilla','Alien'],['Matrix','Interestelar','A Origem','Blade Runner','Star Wars']],
+ 'Séries':[['Friends','How I Met Your Mother','The Office','Brooklyn 99','Big Bang Theory'],['Breaking Bad','Better Call Saul','Ozark','Narcos','Peaky Blinders'],['Stranger Things','Dark','Black Mirror','Wandinha','Supernatural'],['Game of Thrones','Vikings','The Witcher','A Casa do Dragão','The Last Kingdom'],['La Casa de Papel','Round 6','Elite','Sex Education','Euphoria']],
+ 'Famosos':[['Xuxa','Angélica','Eliana','Sandy','Ivete Sangalo'],['Whindersson Nunes','Fábio Porchat','Thiago Ventura','Danilo Gentili','Rafinha Bastos'],['Taylor Swift','Beyoncé','Rihanna','Lady Gaga','Adele'],['Brad Pitt','Leonardo DiCaprio','Tom Cruise','Johnny Depp','Will Smith'],['Anitta','Luísa Sonza','Pabllo Vittar','Ludmilla','Iza']],
+ 'Marcas':[['Nike','Adidas','Puma','Reebok','Fila'],['Coca-Cola','Pepsi','Guaraná Antarctica','Fanta','Sprite'],["McDonald's",'Burger King','Subway','KFC',"Bob's"],['Apple','Samsung','Xiaomi','Motorola','Huawei'],['Netflix','Disney+','Prime Video','HBO Max','Globoplay'],['Nubank','Itaú','Bradesco','Santander','Banco do Brasil'],['Toyota','Honda','Volkswagen','Fiat','Chevrolet']]
+};
+const THEMES=['Quão forte é este animal?','Quão caro é este objeto?','Quão assustador é este bicho?','Quão gostosa é esta comida?','Quão difícil é esta profissão?','Quão rápido é este meio de transporte?','Quão bom é este filme/série?','Quão perigoso é este esporte?','Quão legal é este lugar para visitar?'];
+const LETTERS='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+const MIM={
+ 'Animais':['Elefante','Pinguim','Girafa','Canguru','Macaco','Cobra','Coruja','Tartaruga','Polvo','Morcego','Camelo','Jacaré'],
+ 'Profissões':['Médico','Bombeiro','Professor','Pintor','Cantor','Detetive','Jardineiro','Padeiro','Astronauta','Dentista','Garçom','Fotógrafo'],
+ 'Ações':['Escovar os dentes','Dirigir','Nadar','Cozinhar','Dormir','Pescar','Dançar','Tomar banho','Rir muito','Pular corda','Andar de skate','Chorar'],
+ 'Objetos':['Guarda-chuva','Violão','Escova','Tesoura','Bicicleta','Espelho','Telefone','Óculos','Martelo','Câmera','Cadeira','Chuveiro'],
+ 'Comidas':['Pizza','Sorvete','Macarrão','Pipoca','Hambúrguer','Melancia','Churrasco','Sushi','Bolo','Banana','Ovo frito','Pão de queijo'],
+ 'Esportes':['Futebol','Natação','Boxe','Tênis','Surfe','Vôlei','Judô','Ginástica','Basquete','Golfe','Ciclismo','Skate'],
+ 'Lugares':['Praia','Hospital','Circo','Aeroporto','Cinema','Zoológico','Mercado','Igreja','Estádio','Academia','Biblioteca','Parque']
+};
+let mimCats=['Animais'],mimUsed=[],tmr=null;
+const QUESTIONS={
+ 'Dia a dia':[['Qual sua comida favorita?','Qual sua bebida favorita?','Qual seu doce favorito?','Qual seu lanche favorito?','Qual sua fruta favorita?'],['Que horas você acorda?','Que horas você dorme?','Que horas você almoça?','Que horas você sai de casa?','Que horas você toma banho?']],
+ 'Viagem':[['Qual o melhor lugar que visitou?','Qual lugar quer visitar?','Qual lugar moraria?','Qual lugar nunca voltaria?','Qual lugar sonha conhecer?'],['Você prefere praia?','Você prefere montanha?','Você prefere campo?','Você prefere cidade?','Você prefere deserto?']],
+ 'Comida':[['Qual seu prato favorito?','Qual comida você mais odeia?','Qual comida nunca provou?','Qual comida sabe fazer?','Qual comida pediria no delivery?'],['Qual seu salgado favorito?','Qual seu doce favorito?','Qual sua sobremesa favorita?','Qual seu café da manhã favorito?','Qual seu petisco favorito?']]
+};
+let cfg={mode:'palavra',size:1,imp:1,groups:2,cats:['Comidas']};
+
+function go(v){stopT();g={view:v};if(v==='qso')g.phase='setup';if(v==='letra')g.used=[];if(v==='imp'){g.step=1;cfg={mode:'palavra',size:1,imp:1,groups:2,cats:['Comidas']}}render()}
+function opts(list,cur,fn){return `<div class="chips">${list.map(([v,l,d])=>`<button class="chip opt${v===cur?' on':''}" ${d?'disabled':''} onclick="${fn}('${v}')">${l}</button>`).join('')}</div>`}
+function setMode(v){cfg.mode=v;cfg.cats=[Object.keys(v==='palavra'?WORDS:QUESTIONS)[0]];render()}
+function fix(){
+ const n=players.length;
+ if(cfg.size>1&&Math.floor((n-1)/cfg.size)<2)cfg.size=1;
+ if(cfg.size===1)cfg.imp=Math.min(Math.max(cfg.imp,1),Math.max(1,Math.floor((n-1)/2)));
+ else cfg.groups=Math.min(Math.max(cfg.groups,2),Math.min(4,Math.floor((n-1)/cfg.size)));
+}
+function setSize(v){cfg.size=+v;fix();render()}
+function setImp(v){cfg.imp=+v;render()}
+function setGroups(v){cfg.groups=+v;render()}
+function toggleCat(k){const i=cfg.cats.indexOf(k);i<0?cfg.cats.push(k):cfg.cats.splice(i,1);render()}
+function doideira(){cfg.cats=Object.keys(cfg.mode==='palavra'?WORDS:QUESTIONS);render()}
+Object.assign(WORDS,{
+ 'Personagens da Disney':[['Simba','Mufasa','Scar','Nala'],['Elsa','Anna','Olaf','Kristoff'],['Mickey','Minnie','Donald','Pateta'],['Woody','Buzz Lightyear','Jessie','Rex']],
+ 'Jogadores de futebol':[['Messi','Cristiano Ronaldo','Neymar','Mbappé'],['Pelé','Maradona','Zico','Romário'],['Vinícius Jr','Rodrygo','Endrick','Raphinha']],
+ 'Filmes':[['Shrek','Madagascar','Kung Fu Panda','Divertida Mente'],['Titanic','Gladiador','Coração Valente','Troia'],['Harry Potter','Senhor dos Anéis','Nárnia','O Hobbit']],
+ 'Séries':[['Friends','How I Met Your Mother','The Office','Brooklyn 99'],['Breaking Bad','Better Call Saul','Narcos','Peaky Blinders'],['Stranger Things','Dark','Black Mirror','Wandinha']],
+ 'Famosos':[['Silvio Santos','Faustão','Gugu','Xuxa'],['Anitta','Ivete Sangalo','Claudia Leitte','Pabllo Vittar'],['Whindersson Nunes','Felipe Neto','Carlinhos Maia','Luccas Neto']],
+ 'Marcas':[['Nike','Adidas','Puma','Reebok'],['Coca-Cola','Pepsi','Guaraná Antarctica','Fanta'],['iPhone','Samsung','Xiaomi','Motorola']]
+});
+Object.assign(QUESTIONS,{
+ 'Personagens da Disney':[['Qual seu personagem Disney favorito?','Qual seu vilão Disney favorito?','Qual sua princesa Disney favorita?','Qual filme Disney te fez chorar?','Qual música Disney você mais canta?']],
+ 'Jogadores de futebol':[['Quem é o melhor jogador do mundo?','Quem é o jogador mais habilidoso?','Qual seu jogador brasileiro favorito?','Qual jogador você mais odeia?','Qual jogador você levaria pro seu time?']],
+ 'Filmes':[['Qual seu filme favorito?','Qual filme você mais assistiu?','Qual filme te fez chorar?','Qual filme você nunca terminou?','Qual filme te deu mais medo?']],
+ 'Séries':[['Qual sua série favorita?','Qual série você maratonou?','Qual série você abandonou?','Qual série você indica?','Qual série você assistiria de novo?']],
+ 'Famosos':[['Qual famoso você mais admira?','Qual famoso você gostaria de encontrar?','Qual famoso você acha chato?','Qual famoso você levaria pra jantar?','Qual famoso seria seu amigo?']],
+ 'Marcas':[['Qual sua marca favorita?','Qual marca você mais gasta?','Qual marca você acha cara demais?','Qual marca você mais usa?','Qual marca você nunca compraria?']]
+});
+const NAMES={
+ 'Personagens da Disney':['Mickey','Minnie','Pateta','Donald','Simba','Elsa','Moana','Rapunzel','Aladdin','Woody','Buzz Lightyear','Stitch','Branca de Neve','Cinderela','Ariel'],
+ 'Jogadores de futebol':['Pelé','Neymar','Messi','Cristiano Ronaldo','Ronaldo Fenômeno','Ronaldinho Gaúcho','Zico','Maradona','Mbappé','Vinícius Jr','Kaká','Romário','Cafu','Haaland','Marta'],
+ 'Filmes':['Titanic','Shrek','Avatar','Frozen','Toy Story','Jurassic Park','Homem-Aranha','Batman','Procurando Nemo','Harry Potter','Matrix','Os Incríveis','O Rei Leão','Carros'],
+ 'Séries':['Friends','Breaking Bad','Stranger Things','La Casa de Papel','Game of Thrones','The Office','Round 6','Chaves','Todo Mundo Odeia o Chris','Peaky Blinders','The Big Bang Theory','Wandinha','The Last of Us'],
+ 'Famosos':['Silvio Santos','Xuxa','Anitta','Faustão','Ivete Sangalo','Whindersson Nunes','Felipe Neto','Fábio Porchat','Luciano Huck','Gisele Bündchen','Taylor Swift','Beyoncé','Elon Musk','Michael Jackson'],
+ 'Marcas':['Nike','Coca-Cola',"McDonald's",'Apple','Netflix','Adidas','Spotify','Amazon','Samsung','Havaianas','Magalu','Nubank','iFood','Burger King','Google']
+};
+const more=(c,t)=>{NAMES[c]=[...new Set([...NAMES[c],...t.split('|')])]};
+const cl=(c,t)=>t.split('/').forEach(x=>WORDS[c].push(x.split('|')));
+more('Personagens da Disney',`Mufasa|Scar|Nala|Timão|Pumba|Rafiki|Anna|Olaf|Kristoff|Bela|Fera|Lumière|Gaston|Jasmine|Gênio|Jafar|Tiana|Mulan|Pocahontas|Merida|Sininho|Peter Pan|Capitão Gancho|Alice|Chapeleiro Maluco|Rainha de Copas|Cruella|Malévola|Aurora|Hércules|Hades|Tarzan|Baloo|Mogli|Dumbo|Bambi|Pinóquio|Pluto|Margarida|Tio Patinhas|Jessie|Rex|Mike Wazowski|Sulley|Wall-E|Nemo|Dory|Flash McQueen|Mate|Remy|Miguel|Mirabel|Bruno|Maui|Úrsula`);
+more('Jogadores de futebol',`Garrincha|Rivelino|Falcão|Sócrates|Bebeto|Dunga|Taffarel|Rivaldo|Roberto Carlos|Adriano Imperador|Robinho|Dani Alves|Thiago Silva|Marcelo|Casemiro|Alisson|Ederson|Richarlison|Gabriel Jesus|Raphinha|Rodrygo|Endrick|Paquetá|Marquinhos|Gabigol|Hulk|Ganso|Arrascaeta|Rogério Ceni|Lewandowski|Benzema|Modric|Kroos|Iniesta|Xavi|Ramos|Busquets|Zidane|Henry|Beckham|Rooney|Gerrard|Salah|De Bruyne|Kane|Griezmann|Pogba|Ibrahimovic|Buffon|Pirlo|Maldini|Totti|Neuer|Di María|Agüero|Dybala|Suárez|Cavani|Drogba|Bellingham|Pedri|Yamal|Formiga|Cristiane`);
+more('Filmes',`Vingadores|Homem de Ferro|Capitão América|Thor|Pantera Negra|Doutor Estranho|Guardiões da Galáxia|Deadpool|Coringa|Superman|Mulher-Maravilha|Aquaman|Star Wars|Indiana Jones|De Volta para o Futuro|O Poderoso Chefão|Forrest Gump|Gladiador|Missão Impossível|Velozes e Furiosos|John Wick|Mad Max|Rocky|Top Gun|Interestelar|A Origem|Oppenheimer|Barbie|Parasita|Clube da Luta|O Exorcista|Tubarão|It: A Coisa|Invocação do Mal|Pânico|Moana|Encanto|Divertida Mente|Up: Altas Aventuras|Ratatouille|Monstros S.A.|Enrolados|Aladdin|Madagascar|Kung Fu Panda|Meu Malvado Favorito|Minions|A Era do Gelo|Zootopia|Cidade de Deus|Tropa de Elite|Central do Brasil|Minha Mãe é uma Peça|O Auto da Compadecida|Se Beber Não Case|Click|O Máskara|Ace Ventura|Truque de Mestre`);
+more('Séries',`Dark|Black Mirror|Vikings|The Witcher|The Boys|Lúcifer|Riverdale|Elite|Euphoria|Bridgerton|The Crown|Ozark|Narcos|Sherlock|Dexter|House|Grey's Anatomy|The Walking Dead|Prison Break|Lost|Supernatural|Gossip Girl|Modern Family|Brooklyn 99|How I Met Your Mother|Rick e Morty|Os Simpsons|South Park|Bob Esponja|Hora de Aventura|Phineas e Ferb|Ben 10|Drake & Josh|iCarly|Hannah Montana|Malhação|Avenida Brasil|Carrossel|Chiquititas|A Grande Família|Alice in Borderland|Death Note|Naruto|One Piece|Dragon Ball|Pokémon|Os Cavaleiros do Zodíaco|Attack on Titan|Demon Slayer|The Mandalorian|Loki|WandaVision|Arcane|Chernobyl|House of the Dragon`);
+more('Famosos',`Roberto Carlos|Caetano Veloso|Gilberto Gil|Chico Buarque|Rita Lee|Cazuza|Renato Russo|Tim Maia|Gusttavo Lima|Marília Mendonça|Maiara e Maraisa|Luan Santana|Wesley Safadão|Ludmilla|Luísa Sonza|Pabllo Vittar|Emicida|MC Poze|Alok|Marcos Mion|Ana Maria Braga|Fátima Bernardes|Gugu Liberato|Rodrigo Faro|Casimiro|Gaules|Maisa|Larissa Manoela|Juliana Paes|Sabrina Sato|Tatá Werneck|Fernanda Montenegro|Lázaro Ramos|Wagner Moura|Rodrigo Santoro|Selton Mello|Bruna Marquezine|Cauã Reymond|Grazi Massafera|Giovanna Ewbank|Bruno Gagliasso|Rihanna|Lady Gaga|Ariana Grande|Justin Bieber|Drake|Eminem|Shakira|Bad Bunny|Dua Lipa|Ed Sheeran|Bruno Mars|Billie Eilish|Katy Perry|Madonna|Britney Spears|Elvis Presley|Freddie Mercury|Tom Holland|Zendaya|Leonardo DiCaprio|Brad Pitt|Angelina Jolie|Will Smith|Dwayne Johnson|Keanu Reeves|Johnny Depp|Robert Downey Jr|Emma Watson|Bill Gates|Mark Zuckerberg|Steve Jobs|Albert Einstein|Barack Obama|Papa Francisco|Kim Kardashian|Mr. Bean|Charlie Chaplin`);
+more('Marcas',`Pepsi|Fanta|Sprite|Guaraná Antarctica|Red Bull|Heineken|Skol|Brahma|Nestlé|Kit Kat|Oreo|Nutella|Doritos|Pringles|Subway|KFC|Pizza Hut|Starbucks|Habib's|Outback|Bob's|Puma|Vans|Converse|Lacoste|Oakley|Ray-Ban|Zara|Renner|Riachuelo|C&A|Shein|Chanel|Gucci|Louis Vuitton|Prada|Rolex|Dior|Levi's|Melissa|Natura|O Boticário|Dove|Nivea|Colgate|Xiaomi|Motorola|Microsoft|Sony|PlayStation|Xbox|Nintendo|LG|Tesla|Ferrari|Lamborghini|BMW|Mercedes|Toyota|Volkswagen|Fiat|Chevrolet|Honda|Uber|Airbnb|Instagram|TikTok|WhatsApp|YouTube|Facebook|Discord|Twitch|Disney+|HBO Max|Shopee|Mercado Livre|AliExpress|Americanas|Itaú|Bradesco|Santander|PicPay|Petrobras|Vivo|Claro|Lego|Hot Wheels|Ikea|Decathlon`);
+cl('Personagens da Disney',`Bela|Fera|Lumière|Gaston/Aladdin|Jasmine|Jafar|Gênio/Moana|Maui|Mulan|Pocahontas/Peter Pan|Sininho|Capitão Gancho|Wendy/Alice|Chapeleiro Maluco|Rainha de Copas|Gato Cheshire/Malévola|Cruella|Úrsula|Hades/Mike Wazowski|Sulley|Boo|Randall/Nemo|Dory|Marlin|Bruce`);
+cl('Jogadores de futebol',`Kaká|Rivaldo|Ronaldinho Gaúcho|Robinho/Casemiro|Marquinhos|Thiago Silva|Éder Militão/Alisson|Ederson|Taffarel|Cássio/Gabigol|Pedro|Hulk|Arrascaeta/Zidane|Henry|Platini|Cantona/Beckham|Rooney|Gerrard|Lampard/Modric|Kroos|Iniesta|Xavi/Buffon|Neuer|Casillas|Courtois`);
+cl('Filmes',`Vingadores|Liga da Justiça|Guardiões da Galáxia|Esquadrão Suicida/Velozes e Furiosos|Missão Impossível|John Wick|Mad Max/Tubarão|Jurassic Park|King Kong|Godzilla/Invocação do Mal|Annabelle|A Freira|It: A Coisa/Frozen|Enrolados|Moana|Encanto/Toy Story|Carros|Up: Altas Aventuras|Ratatouille/Cidade de Deus|Tropa de Elite|Central do Brasil|O Auto da Compadecida/Interestelar|A Origem|Oppenheimer|Dunkirk/Se Beber Não Case|Click|Esposa de Mentirinha|Gente Grande`);
+cl('Séries',`Naruto|One Piece|Dragon Ball|Bleach/Attack on Titan|Demon Slayer|Jujutsu Kaisen|Death Note/Os Simpsons|Family Guy|South Park|Rick e Morty/Bob Esponja|Hora de Aventura|Gravity Falls|Phineas e Ferb/Grey's Anatomy|House|The Good Doctor|Plantão Médico/Vikings|Game of Thrones|The Witcher|House of the Dragon/The Walking Dead|Lost|Prison Break|Supernatural/Gossip Girl|Riverdale|Elite|Euphoria`);
+cl('Famosos',`Marília Mendonça|Maiara e Maraisa|Simone e Simaria|Naiara Azevedo/Gusttavo Lima|Luan Santana|Wesley Safadão|Jorge e Mateus/Rihanna|Beyoncé|Lady Gaga|Ariana Grande/Justin Bieber|Drake|Eminem|Bruno Mars/Leonardo DiCaprio|Brad Pitt|Johnny Depp|Tom Cruise/Wagner Moura|Rodrigo Santoro|Selton Mello|Lázaro Ramos/Bill Gates|Mark Zuckerberg|Jeff Bezos|Elon Musk`);
+cl('Marcas',`Starbucks|Subway|KFC|Burger King/Gucci|Prada|Chanel|Louis Vuitton/Ferrari|Lamborghini|Porsche|Maserati/Toyota|Honda|Volkswagen|Fiat/PlayStation|Xbox|Nintendo|Sega/Instagram|TikTok|Kwai|YouTube/Itaú|Bradesco|Santander|Nubank/Ray-Ban|Oakley|Chilli Beans|Lacoste/Heineken|Skol|Brahma|Budweiser`);
+cl('Comidas',`Hambúrguer|X-Burguer|Cheeseburger|Sanduíche/Cachorro-quente|Salsicha|Linguiça|Hot Dog/Sorvete|Picolé|Milkshake|Açaí/Bolo|Torta|Pudim|Mousse/Chocolate|Bombom|Trufa|Brownie/Maçã|Pera|Uva|Pêssego/Banana|Manga|Mamão|Abacaxi/Laranja|Limão|Tangerina|Maracujá/Morango|Framboesa|Amora|Mirtilo/Arroz|Feijão|Farofa|Purê/Frango|Peixe|Carne|Porco/Bife|Picanha|Costela|Fraldinha/Alface|Rúcula|Couve|Espinafre/Cenoura|Beterraba|Batata|Mandioca/Tomate|Pepino|Pimentão|Cebola/Café|Chá|Chocolate quente|Leite/Suco|Refrigerante|Água de coco|Limonada/Cerveja|Vinho|Caipirinha|Whisky/Pão|Torrada|Bolacha|Biscoito/Queijo|Requeijão|Manteiga|Iogurte/Ovo frito|Omelete|Ovo mexido|Ovo cozido/Sopa|Caldo|Canja|Caldinho/Sushi|Sashimi|Temaki|Yakisoba/Taco|Burrito|Nachos|Quesadilla/Pipoca|Batata frita|Amendoim|Salgadinho/Chiclete|Bala|Pirulito|Jujuba/Tapioca|Cuscuz|Beiju|Pamonha/Acarajé|Moqueca|Vatapá|Caruru/Esfiha|Kibe|Falafel|Shawarma/Panqueca|Waffle|Crepe|Pão de mel/Granola|Aveia|Cereal|Muesli/Camarão|Lagosta|Siri|Lula/Salada|Legumes|Verduras|Brócolis/Mel|Geleia|Doce de leite|Nutella`);
+cl('Lugares',`Mercado|Padaria|Açougue|Feira/Shopping|Loja|Outlet|Galeria/Hospital|Clínica|Posto de saúde|UPA/Farmácia|Drogaria|Perfumaria|Ótica/Escola|Creche|Colégio|Universidade/Igreja|Templo|Mesquita|Sinagoga/Banco|Lotérica|Caixa eletrônico|Casa de câmbio/Aeroporto|Rodoviária|Estação de trem|Porto/Hotel|Pousada|Resort|Hostel/Restaurante|Lanchonete|Pizzaria|Churrascaria/Bar|Boteco|Balada|Pub/Parque|Praça|Jardim|Bosque/Zoológico|Aquário|Safári|Fazenda/Museu|Planetário|Teatro|Galeria de arte/Estádio|Ginásio|Quadra|Arena/Academia|Crossfit|Pilates|Estúdio de dança/Delegacia|Fórum|Prefeitura|Cartório/Cemitério|Funerária|Capela|Mausoléu/Cozinha|Sala|Quarto|Banheiro/Garagem|Quintal|Varanda|Sótão/Floresta|Selva|Mata|Cerrado/Deserto|Savana|Tundra|Pântano/Montanha|Vulcão|Penhasco|Caverna/Rio|Lago|Cachoeira|Lagoa/Mar|Oceano|Baía|Enseada/Ilha|Península|Arquipélago|Atol/Cidade|Vila|Povoado|Metrópole/Campo|Roça|Sítio|Chácara/Rua|Avenida|Beco|Viaduto/Ponte|Túnel|Elevado|Passarela/Metrô|Ônibus|Trem|VLT/Parque de diversões|Montanha-russa|Roda-gigante|Carrossel/Camping|Acampamento|Trilha|Refúgio/Piscina|Sauna|Spa|Jacuzzi`);
+cl('Animais',`Leão|Tigre|Leopardo|Guepardo/Urso|Panda|Coala|Urso polar/Elefante|Rinoceronte|Hipopótamo|Búfalo/Cavalo|Zebra|Burro|Mula/Vaca|Boi|Touro|Bezerro/Porco|Javali|Leitão|Capivara/Ovelha|Cabra|Carneiro|Lhama/Galinha|Pato|Peru|Ganso/Águia|Falcão|Gavião|Condor/Papagaio|Arara|Tucano|Periquito/Beija-flor|Sabiá|Canário|Bem-te-vi/Pinguim|Albatroz|Pelicano|Gaivota/Cobra|Jiboia|Sucuri|Víbora/Lagarto|Iguana|Camaleão|Lagartixa/Sapo|Rã|Perereca|Salamandra/Jacaré|Crocodilo|Tartaruga|Cágado/Atum|Salmão|Sardinha|Tilápia/Baiacu|Cavalo-marinho|Arraia|Peixe-palhaço/Polvo|Lula|Água-viva|Estrela-do-mar/Caranguejo|Lagosta|Camarão|Siri/Abelha|Vespa|Marimbondo|Mamangaba/Formiga|Cupim|Besouro|Barata/Borboleta|Mariposa|Libélula|Vaga-lume/Mosquito|Mosca|Pernilongo|Muriçoca/Aranha|Escorpião|Carrapato|Ácaro/Lobo-guará|Chacal|Hiena|Dingo/Coelho|Lebre|Hamster|Porquinho-da-índia/Rato|Camundongo|Esquilo|Castor/Gorila|Chimpanzé|Orangotango|Babuíno/Morcego|Coruja|Gambá|Tatu/Tamanduá|Preguiça|Tatu-bola|Anta/Onça|Jaguatirica|Suçuarana|Gato-do-mato/Canguru|Wallaby|Ornitorrinco|Diabo-da-tasmânia/Foca|Leão-marinho|Morsa|Lontra/Golfinho|Boto|Baleia-jubarte|Cachalote`);
+cl('Objetos',`Cadeira|Banco|Sofá|Poltrona/Mesa|Escrivaninha|Balcão|Bancada/Cama|Beliche|Berço|Colchão/Armário|Guarda-roupa|Gaveta|Estante/Lâmpada|Abajur|Lanterna|Vela/Fogão|Forno|Micro-ondas|Air fryer/Geladeira|Freezer|Frigobar|Adega/Panela|Frigideira|Chaleira|Caçarola/Faca|Garfo|Colher|Espátula/Prato|Tigela|Travessa|Bandeja/Copo|Caneca|Taça|Xícara/Garrafa|Jarra|Squeeze|Térmica/Celular|Tablet|Notebook|Smartwatch/Televisão|Projetor|Monitor|Telão/Fone de ouvido|Caixa de som|Microfone|Rádio/Controle remoto|Joystick|Mouse|Teclado/Caneta|Lápis|Marca-texto|Giz de cera/Caderno|Livro|Agenda|Bloco de notas/Mochila|Mala|Bolsa|Pochete/Carteira|Porta-moedas|Cartão|Cédula/Chave|Cadeado|Fechadura|Maçaneta/Relógio|Despertador|Cronômetro|Ampulheta/Escova|Pente|Secador|Chapinha/Sabonete|Shampoo|Condicionador|Creme/Toalha|Lençol|Cobertor|Edredom/Camiseta|Camisa|Regata|Blusa/Calça|Bermuda|Short|Saia/Tênis|Chinelo|Sandália|Bota/Boné|Chapéu|Gorro|Touca/Anel|Colar|Pulseira|Brinco/Martelo|Chave de fenda|Alicate|Serrote/Vassoura|Rodo|Esfregão|Pá de lixo/Bola|Raquete|Taco|Bastão/Boneca|Carrinho|Quebra-cabeça|Pelúcia`);
+cl('Profissões',`Advogado|Juiz|Promotor|Defensor/Policial|Delegado|Detetive|Guarda/Soldado|Marinheiro|General|Sargento/Engenheiro|Arquiteto|Pedreiro|Mestre de obras/Eletricista|Encanador|Pintor|Marceneiro/Mecânico|Borracheiro|Frentista|Motorista/Programador|Designer|Analista|Hacker/Jornalista|Repórter|Apresentador|Locutor/Escritor|Poeta|Roteirista|Editor/Ator|Atriz|Diretor|Dublador/Músico|Cantor|Maestro|DJ/Bailarino|Coreógrafo|Ginasta|Patinador/Jogador|Árbitro|Técnico|Treinador/Cozinheiro|Chef|Confeiteiro|Barista/Garçom|Atendente|Caixa|Recepcionista/Vendedor|Gerente|Empresário|Comerciante/Contador|Economista|Banqueiro|Auditor/Cientista|Pesquisador|Biólogo|Químico/Físico|Astrônomo|Geólogo|Matemático/Veterinário|Zootecnista|Tratador|Adestrador/Fisioterapeuta|Nutricionista|Psicólogo|Enfermeiro/Farmacêutico|Biomédico|Radiologista|Cirurgião/Professor|Pedagogo|Tutor|Monitor/Agricultor|Pescador|Pecuarista|Lenhador/Barbeiro|Cabeleireiro|Manicure|Maquiador/Costureiro|Estilista|Modelo|Alfaiate/Fotógrafo|Cinegrafista|Editor de vídeo|Ilustrador/Youtuber|Streamer|Influenciador|Podcaster/Padre|Pastor|Monge|Rabino/Político|Prefeito|Governador|Presidente/Salva-vidas|Socorrista|Paramédico|Resgatista/Carteiro|Entregador|Motoboy|Caminhoneiro/Faxineiro|Zelador|Porteiro|Vigia/Mágico|Palhaço|Malabarista|Acrobata`);
+cl('Personagens da Disney',`Rapunzel|Flynn|Mãe Gothel|Pascal/Ariel|Sebastião|Linguado|Eric/Branca de Neve|Cinderela|Aurora|Tiana/Tio Patinhas|Huguinho|Zezinho|Luizinho/Timão|Pumba|Rafiki|Zazu/Stitch|Lilo|Nani|Jumba/Baloo|Mogli|Bagheera|Kaa/Dumbo|Bambi|Pinóquio|Grilo Falante/Buzz|Woody|Jessie|Sr. Cabeça de Batata/Merida|Mulan|Pocahontas|Vaiana/Hércules|Megara|Fil|Pégaso/Marlin|Gill|Bruce|Crush/Remy|Linguini|Colette|Skinner`);
+cl('Jogadores de futebol',`Pelé|Maradona|Garrincha|Cruyff/Ronaldo Fenômeno|Romário|Bebeto|Rivaldo/Cafu|Roberto Carlos|Dani Alves|Marcelo/Haaland|Kane|Lewandowski|Benzema/Salah|Mané|Son|Hakimi/Pedri|Gavi|Yamal|Bellingham/Marta|Formiga|Cristiane|Debinha/Suárez|Cavani|Forlán|Falcao García/De Bruyne|Pirlo|Xavi|Iniesta/Gabigol|Pedro|Hulk|Fred/Di María|Agüero|Dybala|Lautaro`);
+cl('Filmes',`Matrix|Interestelar|Avatar|Star Wars/Titanic|Diário de uma Paixão|Querido John|A Culpa é das Estrelas/Rocky|Rambo|Top Gun|Duro de Matar/Batman|Superman|Homem-Aranha|Hulk/Harry Potter|Crepúsculo|Jogos Vorazes|Divergente/Pânico|Sexta-Feira 13|Halloween|Hellraiser/Barbie|Mamma Mia|La La Land|Grease/A Origem|Tenet|Cisne Negro|Clube da Luta/Procurando Nemo|Rio|Happy Feet|Moana/Os Incríveis|Megamente|Hotel Transilvânia|Meu Malvado Favorito/O Rei Leão|Bambi|Dumbo|Mogli/Forrest Gump|Náufrago|O Resgate do Soldado Ryan|Gladiador`);
+cl('Séries',`Friends|Seinfeld|The Office|The Big Bang Theory/Chaves|Chapolin|Carrossel|Chiquititas/Round 6|La Casa de Papel|Dark|Elite/Wandinha|Stranger Things|Riverdale|Sabrina/The Boys|Invencível|Peacemaker|Watchmen/Loki|WandaVision|Ms. Marvel|Hawkeye/Ben 10|Os Jovens Titãs|Hora de Aventura|Steven Universo/Hannah Montana|iCarly|Drake & Josh|Zoey 101/Todo Mundo Odeia o Chris|Um Maluco no Pedaço|Eu a Patroa e as Crianças|A Grande Família/Narcos|Breaking Bad|Ozark|Better Call Saul/The Last of Us|The Walking Dead|Fear the Walking Dead|Z Nation/Succession|Billions|Suits|House of Cards`);
+cl('Famosos',`Anitta|Ludmilla|Luísa Sonza|Pabllo Vittar/Xuxa|Angélica|Eliana|Mara Maravilha/Silvio Santos|Faustão|Gugu|Raul Gil/Felipe Neto|Luccas Neto|Whindersson Nunes|Carlinhos Maia/Taylor Swift|Beyoncé|Rihanna|Adele/Michael Jackson|Elvis Presley|Freddie Mercury|David Bowie/Brad Pitt|Tom Cruise|Johnny Depp|Leonardo DiCaprio/Gisele Bündchen|Adriana Lima|Alessandra Ambrósio|Naomi Campbell/Tatá Werneck|Fábio Porchat|Paulo Gustavo|Rafael Portugal/Gaules|Casimiro|Alanzoka|Cellbit/Caetano Veloso|Gilberto Gil|Chico Buarque|Milton Nascimento`);
+cl('Marcas',`Netflix|Disney+|HBO Max|Prime Video/Uber|99|InDrive|Cabify/iFood|Rappi|Uber Eats|Aiqfome/Shopee|Shein|AliExpress|Temu/Amazon|Mercado Livre|Magalu|Americanas/Nubank|Inter|C6 Bank|PicPay/Vivo|Claro|TIM|Oi/Natura|O Boticário|Avon|Eudora/Havaianas|Melissa|Crocs|Ipanema/Gol|Latam|Azul|Emirates/Zara|Renner|Riachuelo|C&A/Lacoste|Tommy Hilfiger|Polo Ralph Lauren|Calvin Klein/Spotify|Deezer|YouTube Music|Apple Music/Google|Bing|Yahoo|DuckDuckGo/Toyota|Honda|Nissan|Mitsubishi`);
+if(WORDS['Disney']){WORDS['Personagens da Disney'].push(...WORDS['Disney']);delete WORDS['Disney']}
+Object.assign(MIM,NAMES);
+const QSO={...NAMES,'Animais':MIM['Animais'],'Profissões':MIM['Profissões']};
+let qsoCats=['Personagens da Disney'];
+function qsoToggle(k){const i=qsoCats.indexOf(k);i<0?qsoCats.push(k):qsoCats.splice(i,1);render()}
+function qsoAll(){qsoCats=Object.keys(QSO);render()}
+function qsoStart(){
+ const sel=qsoCats.filter(k=>QSO[k]);if(!sel.length)return alert('Escolha pelo menos um tema.');
+ stopT();const cat=pick(sel);
+ g={view:'qso',phase:'play',cat,pool:shuffle(QSO[cat]),k:0,ok:0,skip:0,t:60};render();
+ tmr=setInterval(()=>{g.t--;const e=$('#qt');if(e)e.textContent=g.t;if(g.t<=0){stopT();g.phase='end';try{navigator.vibrate&&navigator.vibrate(400)}catch(x){}render()}},1000);
+}
+function qsoNext(hit){hit?g.ok++:g.skip++;g.k++;if(g.k>=g.pool.length){stopT();g.phase='end'}render()}
+function stopT(){clearInterval(tmr);tmr=null}
+function mimPool(){return mimCats.flatMap(c=>(MIM[c]||[]).filter(w=>!mimUsed.includes(w)).map(w=>[c,w]))}
+function mimDraw(){stopT();g.t=null;const p=mimPool();if(!p.length){g.cur=null;g.empty=true;render();return}const [c,w]=pick(p);mimUsed.push(w);g.cur=w;g.cat=c;g.show=false;g.empty=false;render()}
+function mimToggle(k){const i=mimCats.indexOf(k);i<0?mimCats.push(k):mimCats.splice(i,1);render()}
+function mimAll(){mimCats=Object.keys(MIM);render()}
+function mimShow(){g.show=true;render()}
+function mimReset(){mimUsed=[];g.empty=false;render()}
+function startT(){
+ stopT();g.t=60;render();
+ tmr=setInterval(()=>{g.t--;const e=$('#tm');if(e)e.textContent=g.t>0?g.t+'s':'Acabou!';if(g.t<=0){stopT();try{navigator.vibrate&&navigator.vibrate(400)}catch(e){}}},1000);
+}
+function addP(){const i=$('#np');const n=i.value.trim();if(n&&roster.length<20&&!roster.includes(n)){roster.push(n);sel.push(n)}save();render();const x=$('#np');if(x)x.focus()}
+function delP(i){const n=roster.splice(i,1)[0];sel=sel.filter(x=>x!==n);save();render()}
+function toggleSel(i){const n=roster[i],k=sel.indexOf(n);k<0?sel.push(n):sel.splice(k,1);save();render()}
+function selAll(){sel=[...roster];save();render()}
+function selNone(){sel=[];save();render()}
+
+function playersBox(){
+ return `<div class="card"><b>Jogadores cadastrados</b> <span style="color:var(--mute)">(${roster.length})</span>
+ <div class="row" style="margin-top:10px"><input id="np" placeholder="Nome" maxlength="16" onkeydown="if(event.key==='Enter')addP()"><button class="btn" onclick="addP()">+</button></div>
+ <div class="chips">${roster.map((p,i)=>`<span class="chip">${esc(p)}<button onclick="delP(${i})">✕</button></span>`).join('')||'<span style="color:var(--mute);font-size:14px">Cadastre quem costuma jogar</span>'}</div></div>`;
+}
+function selectBox(){
+ return `<div class="card"><b>Quem vai jogar?</b> <span style="color:var(--mute)">(${players.length} de ${roster.length})</span>
+ <div class="chips">${roster.map((p,i)=>`<button class="chip opt${sel.includes(p)?' on':''}" onclick="toggleSel(${i})">${esc(p)}</button>`).join('')||'<span style="color:var(--mute);font-size:14px">Cadastre jogadores na tela inicial.</span>'}</div>
+ <div class="row" style="margin-top:10px"><button class="btn alt" onclick="selAll()">Todos</button><button class="btn alt" onclick="selNone()">Nenhum</button>${roster.length?'':'<button class="btn alt" onclick="go(\'home\')">Ir para o início</button>'}</div></div>`;
+}
+
+function startImp(){
+ fix();
+ const n=players.length,s=cfg.size,G=s===1?1:cfg.groups,I=s===1?cfg.imp:n-G*s;
+ const D=cfg.mode==='palavra'?WORDS:QUESTIONS,keys=Object.keys(D);
+ const sel=cfg.cats.filter(k=>keys.includes(k));
+ if(players.length<3)return alert('Precisa de pelo menos 3 jogadores.');
+ if(!sel.length)return alert('Escolha pelo menos um tema.');
+ const cat=pick(sel);
+ const set=shuffle(pick(D[cat])),info={};
+ shuffle(players.map((_,i)=>i)).forEach((p,k)=>{info[p]=k<I?{imp:true}:{imp:false,gi:s===1?0:Math.floor((k-I)/s)}});
+ g={view:'reveal',mode:'imp',multi:sel.length>1,type:cfg.mode,cat,set,G,I,info,order:shuffle(players.map((_,i)=>i)),i:0,shown:false};render();
+}
+function startIto(){
+ if(players.length<2)return alert('Precisa de pelo menos 2 jogadores.');
+ const nums=shuffle(Array.from({length:100},(_,i)=>i+1)).slice(0,players.length);
+ g={view:'reveal',mode:'ito',theme:pick(THEMES),nums,i:0,shown:false};render();
+}
+function show(){g.shown=true;render()}
+function next(){
+ g.i++;g.shown=false;
+ if(g.i>=players.length){g.view=g.mode==='imp'?'impEnd':'itoEnd';g.open=false}
+ render();
+}
+function open_(){g.open=true;render()}
+function sortLetter(){
+ const left=LETTERS.filter(l=>!g.used.includes(l));
+ if(!left.length){g.cur='—';render();return}
+ g.cur=pick(left);g.used.push(g.cur);render();
+}
+
+function render(){
+ players=cur();
+ const a=$('#app');let h='';
+ const v=g.view||'home';
+ if(v==='home'){
+  h=`<h1>Desafios do <span>GG</span></h1><p class="sub">Escolha um desafio e bora jogar.</p><div class="grid">
+  <button class="card game" style="--c:#d4ff3a" onclick="go('imp')"><div class="ic">01</div><div><b>Impostor</b><span>Todos sabem a palavra... menos um.</span></div></button>
+  <button class="card game" style="--c:#ff6a3d" onclick="go('ito')"><div class="ic">02</div><div><b>Ito</b><span>Ordenem os números só com dicas.</span></div></button>
+  <button class="card game" style="--c:#8fd3ff" onclick="go('letra')"><div class="ic">03</div><div><b>Sorteador de letra</b><span>Para Adedonha, Stop e afins.</span></div></button>
+  <button class="card game" style="--c:#ff9ec7" onclick="go('mim')"><div class="ic">04</div><div><b>Mímica / Dicas</b><span>Sorteia palavras por tema.</span></div></button>
+  <button class="card game" style="--c:#c9a6ff" onclick="go('qso')"><div class="ic">05</div><div><b>Quem sou eu</b><span>Adivinhe o nome na testa.</span></div></button></div>
+  ${playersBox()}<p class="sub" style="font-size:13px">Seus jogadores ficam salvos neste aparelho e valem para todos os jogos.</p>`;
+ }
+ else if(v==='imp'){
+  fix();
+  const n=players.length,keys=Object.keys(cfg.mode==='palavra'?WORDS:QUESTIONS),all=keys.every(k=>cfg.cats.includes(k));
+  let grp;
+  if(n<3)grp='<p class="sub">Selecione pelo menos 3 jogadores.</p>';
+  else{
+   grp=`${opts([['1','Individual'],['2','Duplas',Math.floor((n-1)/2)<2],['3','Trios',Math.floor((n-1)/3)<2]],String(cfg.size),'setSize')}`;
+   if(cfg.size===1)grp+=`<p class="sub" style="margin-top:12px">Todos (menos os impostores) recebem o mesmo segredo. Quantos impostores?</p>${opts(Array.from({length:Math.max(1,Math.floor((n-1)/2))},(_,k)=>[String(k+1),String(k+1)]),String(cfg.imp),'setImp')}`;
+   else{const m=Math.min(4,Math.floor((n-1)/cfg.size));grp+=`<p class="sub" style="margin-top:12px">Quantos grupos?</p>${opts(Array.from({length:m-1},(_,k)=>[String(k+2),String(k+2)]),String(cfg.groups),'setGroups')}<p class="sub" style="margin-top:10px">Sobram <b>${n-cfg.groups*cfg.size}</b> impostor(es) atrapalhando.</p>`}
+  }
+  h=`<button class="back" onclick="go('home')">← Menu</button><h2>Impostor</h2>
+  <div class="card"><b>Modo</b>${opts([['palavra','Palavra'],['pergunta','Pergunta']],cfg.mode,'setMode')}<p class="sub" style="margin:12px 0 0">${cfg.mode==='palavra'?'Cada grupo recebe uma palavra parecida e precisa achar seus parceiros. O impostor não recebe palavra.':'Cada grupo recebe uma pergunta parecida e precisa achar seus parceiros. O impostor recebe outra. Respondam em voz alta.'}</p></div>
+  ${selectBox()}
+  <div class="card"><b>Grupos e impostores</b>${grp}</div>
+  <div class="card"><b>Temas</b><p class="sub" style="margin:4px 0 0">Escolha um ou mais. Cada rodada sorteia um deles, sem misturar.</p><div class="chips">${keys.map(k=>`<button class="chip opt${cfg.cats.includes(k)?' on':''}" onclick="toggleCat('${k}')">${k}</button>`).join('')}<button class="chip opt${all?' on':''}" onclick="doideira()">Doideira</button></div></div>
+  <button class="btn" onclick="startImp()">Começar</button>`;
+ }
+ else if(v==='ito'){
+  h=`<button class="back" onclick="go('home')">← Voltar</button><h2>Ito</h2>
+  <p class="sub">Cada um recebe um número de 1 a 100. Deem dicas do tema sem falar números e ordenem do menor para o maior.</p>${selectBox()}
+  <button class="btn blue" onclick="startIto()">Distribuir números</button>`;
+ }
+ else if(v==='reveal'){
+  const pi=g.order?g.order[g.i]:g.i,name=esc(players[pi]);
+  h=`<div class="center"><p class="sub">Jogador ${g.i+1} de ${players.length}</p>`;
+  if(g.mode==='ito')h+=`<div class="card"><b>Tema:</b> ${g.theme}<br><span style="color:var(--mute);font-size:14px">1 = mínimo · 100 = máximo</span></div>`;
+  if(g.mode==='imp')h+=`<div class="card"><b>Tema:</b> ${g.cat}</div>`;
+  if(!g.shown){
+   h+=`<h2>Passe para <span class="warn">${name}</span></h2><div class="secret">?</div><button class="btn" onclick="show()">Ver o meu segredo</button>`;
+  }else{
+   let txt,extra='';
+   if(g.mode==='imp'){
+    const f=g.info[pi],it=f.imp?null:g.set[f.gi];
+    txt=g.type==='palavra'?(f.imp?'<span class="warn">VOCÊ É O IMPOSTOR </span>':it):`<span style="font-size:22px">${f.imp?g.set[g.G]:it}</span>`;
+    if(!f.imp&&g.G>1)extra='<p class="sub">Descubra quem é seu parceiro de grupo sem revelar demais.</p>';
+      }else txt=g.nums[g.i];
+   h+=`<h2>${name}</h2><div class="secret">${txt}</div>${extra}<button class="btn alt" onclick="next()">Esconder e passar</button>`;
+  }
+  h+=`</div>`;
+ }
+ else if(v==='impEnd'){
+  const nm=pred=>players.filter((_,i)=>pred(g.info[i])).map(esc).join(' + ');
+  const grp=Array.from({length:g.G},(_,k)=>`<p>${g.G>1?'Grupo '+(k+1)+': ':''}${nm(f=>!f.imp&&f.gi===k)} → <b>${g.set[k]}</b></p>`).join('');
+  h=`<div class="center"><h2>Todos já viram!</h2><div class="card"><b>Tema:</b> ${g.cat}</div><p class="sub">${g.type==='palavra'?'Deem dicas sem entregar a palavra, achem seus parceiros e descubram o impostor.':'Respondam em voz alta, achem seus parceiros e descubram o impostor.'}</p>
+  ${g.open?`<div class="card"><p class="sub">Impostor(es)</p><div class="big" style="font-size:30px">${nm(f=>f.imp)}</div>${grp}${g.type==='pergunta'?'<p class="sub">Pergunta do impostor: <b>'+g.set[g.G]+'</b></p>':''}</div>`:`<button class="btn" onclick="open_()">Revelar</button>`}
+  <button class="btn alt" onclick="startImp()">Nova rodada</button><button class="btn alt" onclick="go('home')">Menu</button></div>`;
+ }
+ else if(v==='itoEnd'){
+  const ord=players.map((p,i)=>({p,n:g.nums[i]})).sort((a,b)=>a.n-b.n);
+  h=`<div class="center"><h2>Hora de ordenar!</h2><div class="card"><b>${g.theme}</b></div><p class="sub">Deem dicas, posicionem-se do menor para o maior e depois revelem.</p></div>
+  ${g.open?`<div class="card list">${ord.map(o=>`<div><span>${esc(o.p)}</span><b>${o.n}</b></div>`).join('')}</div><p class="center sub">Acertaram a ordem? </p>`:`<button class="btn" onclick="open_()">Revelar números</button>`}
+  <button class="btn alt" onclick="startIto()">Nova rodada</button><button class="btn alt" onclick="go('home')">Menu</button>`;
+ }
+ else if(v==='mim'){
+  const keys=Object.keys(MIM),all=keys.every(k=>mimCats.includes(k)),left=mimPool().length;
+  let box;
+  if(g.empty)box='<div class="secret" style="font-size:22px">Acabaram as palavras! </div>';
+  else if(!g.cur)box='<div class="secret">?</div>';
+  else if(!g.show)box='<div class="secret">?</div><button class="btn blue" onclick="mimShow()">Ver a palavra</button>';
+  else box=`<p class="sub" style="margin:0">${g.cat}</p><div class="secret">${g.cur}</div>`;
+  h=`<button class="back" onclick="go('home')">← Menu</button><h2>Mímica / Dicas</h2>
+  <p class="sub">Faça mímica ou dê dicas sem falar a palavra. Quem acertar ganha o ponto!</p>
+  <div class="card center">${box}<button class="btn" onclick="mimDraw()">Sortear palavra</button></div>
+  <div class="card center"><p class="sub" style="margin:0">Cronômetro</p><div class="big" style="font-size:44px;margin:6px 0" id="tm">${g.t==null?'60s':(g.t>0?g.t+'s':'Acabou!')}</div><button class="btn alt" onclick="startT()">Iniciar 60s</button></div>
+  <div class="card"><b>Temas</b><p class="sub" style="margin:4px 0 0">Escolha um ou mais. Restam ${left} palavras.</p><div class="chips">${keys.map(k=>`<button class="chip opt${mimCats.includes(k)?' on':''}" onclick="mimToggle('${k}')">${k}</button>`).join('')}<button class="chip opt${all?' on':''}" onclick="mimAll()">Doideira</button></div>
+  <button class="btn alt" onclick="mimReset()">Zerar palavras usadas</button></div>`;
+ }
+ else if(v==='qso'){
+  if(g.phase==='play')h=`<div class="center"><p class="sub">${g.cat} · <b id="qt">${g.t}</b>s · acertos ${g.ok}</p><div class="secret" style="font-size:54px;padding:64px 12px">${esc(g.pool[g.k])}</div><button class="btn" onclick="qsoNext(true)">Acertou</button><button class="btn alt" onclick="qsoNext(false)">Pular</button></div>`;
+  else if(g.phase==='end')h=`<div class="center"><h2>Acabou o tempo!</h2><div class="big">${g.ok}</div><p class="sub">acertos · ${g.skip} pulos<br>Tema: ${g.cat}</p><button class="btn" onclick="qsoStart()">Jogar de novo</button><button class="btn alt" onclick="go('home')">Menu</button></div>`;
+  else{
+   const keys=Object.keys(QSO),all=keys.every(k=>qsoCats.includes(k));
+   h=`<button class="back" onclick="go('home')">← Menu</button><h2>Quem sou eu</h2>
+   <p class="sub">Segure o celular na testa sem olhar. Os outros veem o nome e dão dicas; você adivinha em 60 segundos.</p>
+   <div class="card"><b>Temas</b><p class="sub" style="margin:4px 0 0">Escolha um ou mais. Cada rodada sorteia um deles.</p><div class="chips">${keys.map(k=>`<button class="chip opt${qsoCats.includes(k)?' on':''}" onclick="qsoToggle('${k}')">${k}</button>`).join('')}<button class="chip opt${all?' on':''}" onclick="qsoAll()">Doideira</button></div></div>
+   <button class="btn" onclick="qsoStart()">Começar</button>`;
+  }
+ }
+ else if(v==='letra'){
+  h=`<button class="back" onclick="go('home')">← Voltar</button><h2>Sorteador de letra</h2>
+  <div class="card"><div class="big">${g.cur||'?'}</div></div>
+  <button class="btn" onclick="sortLetter()">Sortear</button>
+  <p class="sub" style="margin-top:18px">Já saíram (${g.used.length}/${LETTERS.length})</p>
+  <div class="chips">${g.used.map(l=>`<span class="chip">${l}</span>`).join('')}</div>
+  <button class="btn alt" onclick="g.used=[];g.cur='';render()">Zerar letras</button>`;
+ }
+ a.innerHTML=h;
+}
+render();
+</script>
+</body>
+</html>
